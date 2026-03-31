@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Token Viewer - Keycloak</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        text-align: center;
+        color: white;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        font-size: 1rem;
+        opacity: 0.9;
+      }
+
+      .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        margin-bottom: 20px;
+        overflow: hidden;
+      }
+
+      .card-header {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-bottom: 2px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .card-header h2 {
+        color: #495057;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .badge {
+        background: #1e7e34;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: normal;
+      }
+
+      .badge-warning {
+        background: #ffc107;
+        color: #212529;
+      }
+
+      .badge-danger {
+        background: #dc3545;
+        color: white;
+      }
+
+      .copy-btn {
+        background: #0056b3;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+      }
+
+      .copy-btn:hover {
+        background: #0056b3;
+        transform: translateY(-1px);
+      }
+
+      .copy-btn.copied {
+        background: #28a745;
+      }
+
+      .info-row {
+        display: flex;
+        padding: 12px 20px;
+        border-bottom: 1px solid #e9ecef;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .info-label {
+        font-weight: 600;
+        color: #495057;
+        width: 140px;
+      }
+
+      .info-value {
+        color: #6c757d;
+        flex: 1;
+        word-break: break-all;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .expiry-bar {
+        margin: 10px 20px;
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .expiry-progress {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+        border-radius: 4px;
+        transition: width 1s linear;
+        width: 100%;
+      }
+
+      .refresh-info {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        margin: 15px;
+        padding: 12px 15px;
+        border-radius: 6px;
+      }
+
+      .refresh-info p {
+        color: #856404;
+        font-size: 0.9rem;
+      }
+
+      .footer {
+        text-align: center;
+        color: white;
+        margin-top: 30px;
+        font-size: 0.85rem;
+        opacity: 0.8;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+      }
+
+      .btn-warning {
+        background: #ffc107;
+        color: #212529;
+      }
+
+      .btn-warning:hover {
+        background: #e0a800;
+      }
+
+      .countdown {
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+      }
+
+      @media (max-width: 768px) {
+        .info-label {
+          width: 100%;
+        }
+        .info-value {
+          max-width: 100%;
+        }
+        .info-value:hover {
+          overflow: visible;
+          white-space: normal;
+          word-break: break-all;
+          background-color: #f8f9fa;
+          position: relative;
+          z-index: 1;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          padding: 4px;
+          border-radius: 4px;
+        }
+        .card-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🔐 Keycloak Token Viewer</h1>
+        <p>Lihat dan copy token dengan mudah</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            📋 Informasi Token
+            <span class="badge" id="tokenStatus">Loading...</span>
+          </h2>
+          <div class="button-group">
+            <button class="copy-btn btn-warning" id="refreshPageBtn">🔄 Refresh Halaman</button>
+            <button class="copy-btn" id="copyAllBtn">📋 Copy Semua</button>
+          </div>
+        </div>
+
+        <div id="tokenData">
+          <!-- Data akan diisi oleh JavaScript -->
+        </div>
+
+        <div class="refresh-info">
+          <p>💡 <strong>Tips:</strong> Gunakan menu <strong>[R] Refresh</strong> di terminal untuk memperbarui token, lalu klik <strong>Refresh Halaman</strong> di sini untuk melihat token terbaru.</p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>Token otomatis di-load dari file token.json | Auto-refresh setiap 30 detik</p>
+      </div>
+    </div>
+
+    <script type="module">
+      // ==================== Helper Functions ====================
+
+      // Fungsi untuk decode JWT token
+      function decodeJWT(token) {
+        try {
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replaceAll('-', '+').replaceAll('_', '/');
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split('')
+              .map(function (c) {
+                const code = c.codePointAt(0);
+                return '%' + ('00' + code.toString(16)).slice(-2);
+              })
+              .join(''),
+          );
+          return JSON.parse(jsonPayload);
+        } catch (error) {
+          console.error('Failed to decode JWT:', error);
+          return null;
+        }
+      }
+
+      // Fungsi untuk memformat tanggal
+      function formatDate(timestamp) {
+        if (!timestamp) return 'N/A';
+        const date = new Date(timestamp * 1000);
+        return date.toLocaleString('id-ID');
+      }
+
+      // Fungsi untuk menghitung sisa waktu dari dua timestamp
+      function getTimeLeftFromExpiry(expTimestamp) {
+        if (!expTimestamp) return 'N/A';
+        const now = Math.floor(Date.now() / 1000);
+        const diff = expTimestamp - now;
+
+        if (diff <= 0) return 'Expired';
+
+        const hours = Math.floor(diff / 3600);
+        const minutes = Math.floor((diff % 3600) / 60);
+        const seconds = diff % 60;
+
+        if (hours > 0) {
+          return `${hours} jam ${minutes} menit ${seconds} detik`;
+        } else if (minutes > 0) {
+          return `${minutes} menit ${seconds} detik`;
+        } else {
+          return `${seconds} detik`;
+        }
+      }
+
+      // Fungsi untuk mendapatkan persentase sisa waktu
+      function getExpiryPercentage(expTimestamp, iatTimestamp) {
+        if (!expTimestamp || !iatTimestamp) return 100;
+        const now = Math.floor(Date.now() / 1000);
+        const total = expTimestamp - iatTimestamp;
+        const remaining = expTimestamp - now;
+        const percentage = (remaining / total) * 100;
+        return Math.min(100, Math.max(0, percentage));
+      }
+
+      // Fungsi untuk mendapatkan kelas badge berdasarkan sisa waktu
+      function getBadgeClass(expTimestamp) {
+        if (!expTimestamp) return 'badge-warning';
+        const now = Math.floor(Date.now() / 1000);
+        const diff = expTimestamp - now;
+
+        if (diff <= 0) return 'badge-danger';
+        if (diff < 300) return 'badge-danger';
+        if (diff < 1800) return 'badge-warning';
+        return 'badge';
+      }
+
+      // Fungsi untuk update status badge
+      function updateStatusBadge(expTimestamp, timeLeft) {
+        const statusBadge = document.getElementById('tokenStatus');
+        if (expTimestamp) {
+          const now = Math.floor(Date.now() / 1000);
+          const isValid = expTimestamp > now;
+          const badgeClass = getBadgeClass(expTimestamp);
+
+          if (isValid) {
+            statusBadge.innerHTML = `✅ Valid (${timeLeft})`;
+            statusBadge.className = `badge ${badgeClass}`;
+          } else {
+            statusBadge.innerHTML = `❌ Expired`;
+            statusBadge.className = 'badge-danger';
+          }
+        } else {
+          statusBadge.innerHTML = `⚠️ Unknown`;
+          statusBadge.className = 'badge-warning';
+        }
+      }
+
+      // Fungsi untuk escape string untuk HTML
+      function escapeHtml(str) {
+        if (!str) return '';
+        return str.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+      }
+
+      // Fungsi untuk membuat info row HTML
+      function createInfoRow(label, value, id, showCopy = true) {
+        const escapedValue = escapeHtml(value || 'N/A');
+        const escapedForJs = escapedValue.replaceAll("'", String.raw`\'`);
+        const copyButton = showCopy && value ? `<button id="copy-${id}" class="copy-btn" onclick="copyToClipboard('${escapedForJs}', '${id}')">Copy</button>` : '';
+        const displayValue = escapedValue || 'N/A';
+
+        return `
+          <div class="info-row">
+            <div class="info-label">${label}</div>
+            <div class="info-value" id="${id}" title="${displayValue.replaceAll('"', '&quot;')}">${displayValue}</div>
+            ${copyButton}
+          </div>
+        `;
+      }
+
+      // Fungsi untuk membuat bagian decoded JWT info
+      function createDecodedInfo(decodedPayload) {
+        if (!decodedPayload) return '';
+
+        const username = decodedPayload.preferred_username || decodedPayload.name || 'N/A';
+        const roles = decodedPayload.resource_access?.localscm?.roles?.join(', ') || decodedPayload.realm_access?.roles?.join(', ') || decodedPayload.role || 'N/A';
+
+        return `
+          ${createInfoRow('👤 Username:', username, 'username', false)}
+          ${createInfoRow('🎭 Roles:', roles, 'roles', false)}
+        `;
+      }
+
+      // Fungsi untuk membuat expiry bar
+      function createExpiryBar(expTimestamp, iatTimestamp) {
+        if (!expTimestamp || !iatTimestamp) return '';
+        const expiryPercentage = getExpiryPercentage(expTimestamp, iatTimestamp);
+        return `
+          <div class="expiry-bar">
+            <div class="expiry-progress" style="width: ${expiryPercentage}%"></div>
+          </div>
+        `;
+      }
+
+      // Fungsi untuk mendapatkan warna countdown
+      function getCountdownColor(expTimestamp) {
+        if (!expTimestamp) return '#6c757d';
+        const now = Math.floor(Date.now() / 1000);
+        return expTimestamp > now ? '#28a745' : '#dc3545';
+      }
+
+      // Fungsi untuk membuat expiry info HTML
+      function createExpiryInfo(expTimestamp, iatTimestamp, timeLeft) {
+        if (!expTimestamp) return '';
+
+        const countdownColor = getCountdownColor(expTimestamp);
+
+        return `
+          <div class="info-row">
+            <div class="info-label">⏰ Token Expiry (JWT):</div>
+            <div class="info-value">
+              ${formatDate(expTimestamp)}
+              <span class="countdown" style="color: ${countdownColor}">
+                (${timeLeft})
+              </span>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">📅 Issued At (JWT):</div>
+            <div class="info-value">${formatDate(iatTimestamp)}</div>
+          </div>
+        `;
+      }
+
+      // Fungsi utama untuk menampilkan token (direfactor)
+      const loadToken = async () => {
+        try {
+          const response = await fetch('token.json?' + Date.now());
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const token = await response.json();
+
+          // Parse JWT
+          let expTimestamp = null;
+          let iatTimestamp = null;
+          let decodedPayload = null;
+
+          if (token.access_token) {
+            decodedPayload = decodeJWT(token.access_token);
+            if (decodedPayload) {
+              expTimestamp = decodedPayload.exp;
+              iatTimestamp = decodedPayload.iat;
+            }
+          }
+
+          // Hitung sisa waktu
+          const timeLeft = getTimeLeftFromExpiry(expTimestamp);
+
+          // Update status badge
+          updateStatusBadge(expTimestamp, timeLeft);
+
+          // Build HTML komponen per komponen
+          const sessionStateRow = createInfoRow('🔑 Session State:', token.session_state, 'sessionState');
+          const accessTokenRow = createInfoRow('🎫 Access Token:', token.access_token, 'accessToken');
+          const refreshTokenRow = createInfoRow('🔄 Refresh Token:', token.refresh_token, 'refreshToken');
+          const expiryInfo = createExpiryInfo(expTimestamp, iatTimestamp, timeLeft);
+          const expiryBar = createExpiryBar(expTimestamp, iatTimestamp);
+          const tokenTypeRow = createInfoRow('🔖 Token Type:', token.token_type, 'tokenType', false);
+          const scopeRow = createInfoRow('📝 Scope:', token.scope, 'scope', false);
+          const decodedInfo = createDecodedInfo(decodedPayload);
+
+          // Gabungkan semua komponen
+          const html = `
+            ${sessionStateRow}
+            ${accessTokenRow}
+            ${refreshTokenRow}
+            ${expiryInfo}
+            ${expiryBar}
+            ${tokenTypeRow}
+            ${scopeRow}
+            ${decodedInfo}
+          `;
+
+          document.getElementById('tokenData').innerHTML = html;
+
+          // Schedule next update jika token masih valid
+          if (expTimestamp && expTimestamp > Math.floor(Date.now() / 1000)) {
+            setTimeout(() => loadToken(), 1000);
+          }
+        } catch (error) {
+          console.error('Error loading token:', error);
+          document.getElementById('tokenData').innerHTML = `
+            <div style="padding: 40px; text-align: center; color: #dc3545;">
+              <h3>❌ Gagal memuat token.json</h3>
+              <p style="margin-top: 10px;">Error: ${error.message}</p>
+              <p style="margin-top: 20px;">Pastikan:</p>
+              <ul style="text-align: left; display: inline-block; margin-top: 10px;">
+                <li>File token.json ada di folder yang sama</li>
+                <li>File token.json memiliki format JSON yang valid</li>
+                <li>Anda sudah melakukan login terlebih dahulu</li>
+              </ul>
+              <div style="margin-top: 20px;">
+                <button class="copy-btn" onclick="location.reload()">🔄 Refresh Halaman</button>
+              </div>
+            </div>
+          `;
+          document.getElementById('tokenStatus').innerHTML = '❌ Error';
+          document.getElementById('tokenStatus').className = 'badge-danger';
+        }
+      };
+
+      // Fungsi global untuk copy ke clipboard
+      globalThis.copyToClipboard = async function (text, elementId) {
+        if (!text || text === 'N/A') {
+          alert('❌ Tidak ada data untuk di-copy');
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(text);
+
+          const btn = document.getElementById(elementId);
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '✅ Copied!';
+          btn.classList.add('copied');
+
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('copied');
+          }, 2000);
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      // Fungsi untuk membuat teks copy all
+      function buildCopyAllText(token, decoded) {
+        const lines = [`Session State: ${token.session_state}`, `Access Token: ${token.access_token}`, `Refresh Token: ${token.refresh_token}`, `Token Type: ${token.token_type}`, `Scope: ${token.scope}`];
+
+        if (decoded) {
+          lines.push(`Username: ${decoded.preferred_username || decoded.name}`, `Expiry: ${new Date(decoded.exp * 1000).toLocaleString('id-ID')}`, `Issued At: ${new Date(decoded.iat * 1000).toLocaleString('id-ID')}`);
+        }
+
+        return lines.join('\n');
+      }
+
+      // Copy semua data
+      document.getElementById('copyAllBtn')?.addEventListener('click', async function () {
+        try {
+          const response = await fetch('token.json?' + Date.now());
+          const token = await response.json();
+          const decoded = token.access_token ? decodeJWT(token.access_token) : null;
+
+          const allData = buildCopyAllText(token, decoded);
+          await navigator.clipboard.writeText(allData);
+
+          const originalText = this.innerHTML;
+          this.innerHTML = '✅ All Copied!';
+          this.classList.add('copied');
+
+          setTimeout(() => {
+            this.innerHTML = originalText;
+            this.classList.remove('copied');
+          }, 2000);
+        } catch (err) {
+          console.error(err);
+        }
+      });
+
+      // Refresh halaman
+      document.getElementById('refreshPageBtn')?.addEventListener('click', function () {
+        location.reload();
+      });
+
+      // Auto refresh setiap 30 detik
+      setInterval(() => {
+        loadToken();
+      }, 30000);
+
+      // Load token saat halaman dibuka
+      loadToken();
+    </script>
+  </body>
+</html>

@@ -3,7 +3,7 @@
 # Untuk Mac/Linux
 # ============================================
 
-.PHONY: help menu login refresh clean install setup
+.PHONY: help menu login refresh view clean install setup
 
 # Warna untuk output
 GREEN := \033[0;32m
@@ -19,22 +19,28 @@ NC := \033[0m # No Color
 menu:
 	@while true; do \
 		clear; \
-		echo "$(BLUE)----------------------------------------$(NC)"; \
+		echo "$(BLUE)========================================$(NC)"; \
+		echo "$(GREEN)   KEYCLOAK AUTHENTICATION TOOL$(NC)"; \
+		echo "$(BLUE)========================================$(NC)"; \
+		echo ""; \
 		echo "$(GREEN)[L]$(NC) Login - Dapatkan token baru"; \
 		echo "$(GREEN)[R]$(NC) Refresh - Perbarui token yang ada"; \
+		echo "$(GREEN)[V]$(NC) View - Buka Token Viewer"; \
 		echo "$(GREEN)[I]$(NC) Info - Lihat informasi token"; \
 		echo "$(GREEN)[C]$(NC) Clean - Hapus file token"; \
 		echo "$(RED)[Q]$(NC) Quit - Keluar"; \
+		echo ""; \
 		echo "$(BLUE)----------------------------------------$(NC)"; \
-		read -n 1 -p "$$(echo "$(YELLOW)Choose [L/R/I/C/Q]:$(NC) ")" choice; \
+		read -n 1 -p "$$(echo "$(YELLOW)Choose [L/R/V/I/C/Q]:$(NC) ")" choice; \
 		echo ""; \
 		case $$choice in \
 			[Ll]) make login ;; \
 			[Rr]) make refresh ;; \
+			[Vv]) make view ;; \
 			[Ii]) make info ;; \
 			[Cc]) make clean ;; \
 			[Qq]) echo "$(BLUE)Exiting...$(NC)"; exit 0 ;; \
-			*) echo "$(RED)Invalid choice! Please select L, R, I, C, or Q$(NC)"; sleep 1 ;; \
+			*) echo "$(RED)Invalid choice! Please select L, R, V, I, C, or Q$(NC)"; sleep 1 ;; \
 		esac; \
 	done
 
@@ -56,6 +62,17 @@ refresh:
 	@node auth-refresh-token.js
 	@echo ""
 	@echo "$(GREEN)✅ Refresh selesai$(NC)"
+	@read -n 1 -s -r -p "Press any key to continue..."
+
+## View - Membuka Token Viewer di terminal baru (Mac/Linux)
+view:
+	@clear
+	@echo "$(YELLOW)🚀 Membuka Token Viewer di terminal baru...$(NC)"
+	@echo ""
+	@osascript -e 'tell application "Terminal" to do script "cd \"$(PWD)\" && ./start-viewer.sh"' 2>/dev/null || \
+	(xterm -e "cd \"$(PWD)\" && ./start-viewer.sh" 2>/dev/null &) || \
+	./start-viewer.sh &
+	@echo "$(GREEN)✅ Token Viewer dibuka di terminal baru$(NC)"
 	@read -n 1 -s -r -p "Press any key to continue..."
 
 ## Info - Melihat informasi token yang tersimpan
@@ -87,7 +104,7 @@ info:
 		}" 2>/dev/null || echo "   ⚠️  Tidak bisa membaca informasi token"; \
 	else \
 		echo "$(RED)❌ File token.json tidak ditemukan$(NC)"; \
-		echo "$(YELLOW}💡 Jalankan 'make login' terlebih dahulu$(NC)"; \
+		echo "$(YELLOW)💡 Jalankan 'make login' terlebih dahulu$(NC)"; \
 	fi
 	@echo ""
 	@read -n 1 -s -r -p "Press any key to continue..."
@@ -112,7 +129,7 @@ clean:
 install:
 	@clear
 	@echo "$(YELLOW)📦 Menginstall dependencies...$(NC)"
-	@npm install axios dotenv
+	@npm install axios dotenv express open
 	@echo "$(GREEN)✅ Dependencies berhasil diinstall$(NC)"
 	@echo ""
 	@read -n 1 -s -r -p "Press any key to continue..."
@@ -147,6 +164,7 @@ help:
 	@echo "  make menu        - Menampilkan menu interaktif"
 	@echo "  make login       - Login dan dapatkan token baru"
 	@echo "  make refresh     - Refresh token yang ada"
+	@echo "  make view        - Buka Token Viewer di browser"
 	@echo "  make info        - Lihat informasi token"
 	@echo "  make clean       - Hapus file token"
 	@echo "  make install     - Install dependencies"
@@ -157,6 +175,7 @@ help:
 	@echo "  make setup       # Setup pertama kali"
 	@echo "  make menu        # Jalankan menu interaktif"
 	@echo "  make login       # Langsung login"
+	@echo "  make view        # Buka token viewer"
 	@echo ""
 	@echo "$(BLUE)----------------------------------------$(NC)"
 	@echo "💡 Tips: Jalankan 'make setup' untuk pertama kali"
@@ -175,20 +194,20 @@ status:
 	@echo "📄 Files:"
 	@for file in .env .env.example token.json package.json; do \
 		if [ -f $$file ]; then \
-			echo "   $(GREEN)✅$$(NC) $$file"; \
+			echo "   $(GREEN)✅$(NC) $$file"; \
 		else \
-			echo "   $(RED)❌$$(NC) $$file"; \
+			echo "   $(RED)❌$(NC) $$file"; \
 		fi \
 	done
 	@echo ""
 	@echo "📦 Dependencies:"
 	@if [ -d node_modules ]; then \
 		echo "   $(GREEN)✅ node_modules$(NC)"; \
-		for pkg in axios dotenv; do \
+		for pkg in axios dotenv express open; do \
 			if [ -d node_modules/$$pkg ]; then \
-				echo "      $(GREEN)✅$$(NC) $$pkg"; \
+				echo "      $(GREEN)✅$(NC) $$pkg"; \
 			else \
-				echo "      $(RED)❌$$(NC) $$pkg"; \
+				echo "      $(RED)❌$(NC) $$pkg"; \
 			fi \
 		done \
 	else \
