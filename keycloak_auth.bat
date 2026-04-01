@@ -10,7 +10,7 @@ echo ========================================
 echo.
 echo [L] Login - Dapatkan token baru
 echo [R] Refresh - Perbarui token yang ada
-echo [V] View - Buka Token Viewer (jendela baru)
+echo [V] View - Buka Token Viewer
 echo [Q] Quit - Keluar
 echo.
 echo ----------------------------------------

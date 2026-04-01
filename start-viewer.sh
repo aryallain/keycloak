@@ -10,21 +10,6 @@ cd "$(dirname "$0")" || exit
 PORT=$(grep -E "^PORT=" .env 2>/dev/null | cut -d'=' -f2)
 PORT=${PORT:-3000}
 
-echo "========================================"
-echo "   KEYCLOAK TOKEN VIEWER"
-echo "========================================"
-echo
-echo "🚀 Memulai server Token Viewer..."
-echo "📡 Server akan berjalan di http://localhost:$PORT"
-echo
-echo "💡 Tips:"
-echo "   - Browser akan terbuka otomatis"
-echo "   - Tekan Ctrl+C untuk menghentikan server"
-echo "   - Token akan otomatis update setiap 30 detik"
-echo
-echo "========================================"
-echo
-
 # Flag untuk mencegah browser terbuka dua kali
 BROWSER_OPENED=false
 

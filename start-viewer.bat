@@ -8,21 +8,6 @@ if exist .env (
     for /f "tokens=2 delims==" %%a in ('findstr /i "^PORT=" .env') do set PORT=%%a
 )
 
-echo ========================================
-echo    KEYCLOAK TOKEN VIEWER
-echo ========================================
-echo.
-echo 🚀 Memulai server Token Viewer...
-echo 📡 Server akan berjalan di http://localhost:%PORT%
-echo.
-echo 💡 Tips: 
-echo    - Browser akan terbuka otomatis
-echo    - Tutup jendela ini untuk menghentikan server
-echo    - Token akan otomatis update setiap 30 detik
-echo.
-echo ========================================
-echo.
-
 :: Cek apakah port sudah digunakan
 netstat -an | findstr ":%PORT%.*LISTENING" > nul
 if %errorlevel% equ 0 (
